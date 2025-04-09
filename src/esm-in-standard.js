@@ -4,7 +4,7 @@ window.using = (...args) => window.addEventListener("esmReady", async () => {
 	else if (args.length === 3) [mods, ctx, fn] = args;
 	if (!Array.isArray(mods)) mods = [mods];
 	if (!Array.isArray(ctx)) ctx = [ctx];
-	fn.call(null, ...ctx, await Promise.all(mods.map(_import)));
+	fn.call(null, await Promise.all(mods.map(_import)), ...ctx);
 });
 
 (() => {
