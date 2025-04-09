@@ -211,8 +211,13 @@ let $ = { // Convenience for internals.
 		console.log(`Surreal: Adding convenience globals to window.`)
 		let restricted = ['$', 'sugar']
 		for (const [key, value] of Object.entries(this)) {
-			if (!restricted.includes(key)) window[key] != 'undefined' ? window[key] = value : console.warn(`Surreal: "${key}()" already exists on window. Skipping to prevent overwrite.`)
-			window.document[key] = value
+			if (!restricted.includes(key)) {
+				if (!window[key]) window[key] = value
+				else console.warn(`Surreal: "${key}()" already exists on window. Skipping to prevent overwrite.`)
+			}
+
+			if (!window.document[key]) window.document[key] = value
+			else console.warn(`Surreal: "${key}()" already exists on document. Skipping to prevent overwrite.`)
 		}
 	},
 	// ⚙️ Used internally. Is this an element / node?
@@ -284,33 +289,3 @@ function pluginEffects(e) {
 // 🔌 Add plugins here!
 surreal.plugins.push(pluginEffects)
 console.log("Surreal: Added plugins.")
-
-// 🌐 Add global shortcuts here!
-// DOM.
-const createElement = create_element = document.createElement.bind(document)
-// Animation.
-const rAF = typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame
-const rIC = typeof requestIdleCallback !== 'undefined' && requestIdleCallback
-// Animation: Wait for next animation frame, non-blocking.
-async function tick() {
-	return await new Promise(resolve => { requestAnimationFrame(resolve) })
-}
-// Animation: Sleep, non-blocking.
-async function sleep(ms, e) {
-	return await new Promise(resolve => setTimeout(() => { resolve(e) }, ms))
-}
-// Loading: Why? So you don't clobber window.onload (predictable sequential loading)
-// Example: <script>onloadAdd(() => { console.log("Page was loaded!") })</script>
-// Example: <script>onloadAdd(() => { console.log("Lets do another thing without clobbering window.onload!") })</script>
-const onloadAdd = addOnload = onload_add = add_onload = (f) => {
-	if (typeof window.onload === 'function') { // window.onload already is set, queue functions together (creates a call chain).
-		let onload_old = window.onload
-		window.onload = () => {
-			onload_old()
-			f()
-		}
-		return
-	}
-	window.onload = f // window.onload was not set yet.
-}
-console.log("Surreal: Added shortcuts.")
